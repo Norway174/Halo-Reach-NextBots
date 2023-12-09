@@ -2257,6 +2257,13 @@ function ENT:DoKilledAnim()
 					wep:SetPos(self.Weapon:GetPos())
 					wep:SetAngles(self.Weapon:GetAngles())
 					wep:Spawn()
+					if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
+						timer.Simple( 60, function()
+							if IsValid(wep) and !IsValid(wep:GetOwner()) then
+								wep:Remove()
+							end
+						end)
+					end
 				end
 				self.Weapon:Remove()
 				local rag = self:CreateRagdoll(self.KilledDmgInfo)
@@ -2276,20 +2283,23 @@ function ENT:DoKilledAnim()
 						wep:SetPos(self.Weapon:GetPos())
 						wep:SetAngles(self.Weapon:GetAngles())
 						wep:Spawn()
+						if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
+							timer.Simple( 60, function()
+								if IsValid(wep) and !IsValid(wep:GetOwner()) then
+									wep:Remove()
+								end
+							end)
+						end
 					end
 					self.Weapon:Remove()
-					local rag
+					local rag = self:CreateRagdoll(DamageInfo())
 					if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 						timer.Simple( 60, function()
-							if IsValid(wep) and !IsValid(wep:GetOwner()) then
-								wep:Remove()
-							end
 							if IsValid(rag) then
 								rag:Remove()
 							end
 						end)
 					end
-					rag = self:CreateRagdoll(DamageInfo())
 					if self.GetPlayerColor then
 						net.Start( "HRNBsSpartanSpawned" )
 						net.WriteEntity( rag )
@@ -2307,20 +2317,23 @@ function ENT:DoKilledAnim()
 				wep:SetPos(self.Weapon:GetPos())
 				wep:SetAngles(self.Weapon:GetAngles())
 				wep:Spawn()
+				if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
+					timer.Simple( 60, function()
+						if IsValid(wep) and !IsValid(wep:GetOwner()) then
+							wep:Remove()
+						end
+					end)
+				end
 			end
 			self.Weapon:Remove()
-			local rag
+			local rag = self:CreateRagdoll(self.KilledDmgInfo)
 			if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 				timer.Simple( 60, function()
-					if IsValid(wep) and !IsValid(wep.Owner) then
-						wep:Remove()
-					end
 					if IsValid(rag) then
 						rag:Remove()
 					end
 				end)
 			end
-			rag = self:CreateRagdoll(self.KilledDmgInfo)
 			if self.GetPlayerColor then
 				net.Start( "HRNBsSpartanSpawned" )
 				net.WriteEntity( rag )
@@ -2340,7 +2353,7 @@ function ENT:DoKilledAnim()
 		coroutine.wait(0.5)
 		while (!self.HasLanded) do
 			if self.AlternateLanded then
-				local rag
+				local rag = self:CreateRagdoll(DamageInfo())
 				if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 					timer.Simple( 60, function()
 						if IsValid(rag) then
@@ -2348,7 +2361,6 @@ function ENT:DoKilledAnim()
 						end
 					end)
 				end
-				rag = self:CreateRagdoll(DamageInfo())
 				if self.GetPlayerColor then
 					net.Start( "HRNBsSpartanSpawned" )
 					net.WriteEntity( rag )
@@ -2365,20 +2377,23 @@ function ENT:DoKilledAnim()
 			wep:SetPos(self.Weapon:GetPos())
 			wep:SetAngles(self.Weapon:GetAngles())
 			wep:Spawn()
+			if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
+				timer.Simple( 60, function()
+					if IsValid(wep) then
+						wep:Remove()
+					end
+				end)
+			end
 		end
 		self.Weapon:Remove()
-		local rag
+		local rag = self:CreateRagdoll(DamageInfo())
 		if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 			timer.Simple( 60, function()
-				if IsValid(wep) then
-					wep:Remove()
-				end
 				if IsValid(rag) then
 					rag:Remove()
 				end
 			end)
 		end
-		rag = self:CreateRagdoll(DamageInfo())
 		if self.GetPlayerColor then
 			net.Start( "HRNBsSpartanSpawned" )
 			net.WriteEntity( rag )

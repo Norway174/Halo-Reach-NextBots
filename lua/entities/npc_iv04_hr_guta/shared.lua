@@ -718,7 +718,7 @@ function ENT:DoKilledAnim()
 			local seq, len = self:LookupSequence(anim)
 			timer.Simple( len, function()
 				if IsValid(self) then
-					local rag
+					local rag = self:CreateRagdoll(DamageInfo())
 					if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 						timer.Simple( 60, function()
 							if IsValid(rag) then
@@ -726,7 +726,6 @@ function ENT:DoKilledAnim()
 							end
 						end)
 					end
-					rag = self:CreateRagdoll(DamageInfo())
 				end
 			end )
 			self:ResetSequence(anim)
@@ -744,7 +743,7 @@ function ENT:DoKilledAnim()
 			end
 		else
 			self:Speak("OnDeathPainful")
-			local rag
+			local rag = self:CreateRagdoll(self.KilledDmgInfo)
 			if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 				timer.Simple( 60, function()
 					if IsValid(rag) then
@@ -752,11 +751,10 @@ function ENT:DoKilledAnim()
 					end
 				end)
 			end
-			rag = self:CreateRagdoll(self.KilledDmgInfo)
 		end
 	else
 		self:Speak("OnDeathThrown")
-		local rag
+		local rag = self:CreateRagdoll(self.KilledDmgInfo)
 		if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 			timer.Simple( 60, function()
 				if IsValid(rag) then
@@ -764,7 +762,6 @@ function ENT:DoKilledAnim()
 				end
 			end)
 		end
-		rag = self:CreateRagdoll(self.KilledDmgInfo)
 	end
 end
 

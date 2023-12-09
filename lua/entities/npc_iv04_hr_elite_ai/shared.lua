@@ -2445,6 +2445,13 @@ function ENT:DoKilledAnim()
 					wep:SetPos(self.Weapon:GetPos())
 					wep:SetAngles(self.Weapon:GetAngles())
 					wep:Spawn()
+					if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
+						timer.Simple( 60, function()
+							if IsValid(wep) and !IsValid(wep.Owner) then
+								wep:Remove()
+							end
+						end)
+					end
 				end
 				self.Weapon:Remove()
 				local rag = self:BecomeRagdoll(DamageInfo())
@@ -2458,20 +2465,23 @@ function ENT:DoKilledAnim()
 						wep:SetPos(self.Weapon:GetPos())
 						wep:SetAngles(self.Weapon:GetAngles())
 						wep:Spawn()
+						if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
+							timer.Simple( 60, function()
+								if IsValid(wep) and !IsValid(wep.Owner) then
+									wep:Remove()
+								end
+							end)
+						end
 					end
 					self.Weapon:Remove()
-					local rag
+					local rag = self:BecomeRagdoll(DamageInfo())
 					if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 						timer.Simple( 60, function()
-							if IsValid(wep) and !IsValid(wep:GetOwner()) then
-								wep:Remove()
-							end
 							if IsValid(rag) then
 								rag:Remove()
 							end
 						end)
 					end
-					rag = self:BecomeRagdoll(DamageInfo())
 				end
 			end )
 			self:PlaySequenceAndPWait(seq, 1, self:GetPos())
@@ -2482,20 +2492,23 @@ function ENT:DoKilledAnim()
 				wep:SetPos(self.Weapon:GetPos())
 				wep:SetAngles(self.Weapon:GetAngles())
 				wep:Spawn()
+				if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
+					timer.Simple( 60, function()
+						if IsValid(wep) and !IsValid(wep.Owner) then
+							wep:Remove()
+						end
+					end)
+				end
 			end
 			self.Weapon:Remove()
-			local rag
+			local rag = self:BecomeRagdoll(self.KilledDmgInfo)
 			if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 				timer.Simple( 60, function()
-					if IsValid(wep) and !IsValid(wep.Owner) then
-						wep:Remove()
-					end
 					if IsValid(rag) then
 						rag:Remove()
 					end
 				end)
 			end
-			rag = self:BecomeRagdoll(self.KilledDmgInfo)
 		end
 	else
 		self:Speak("OnDeathPainful")
@@ -2520,20 +2533,23 @@ function ENT:DoKilledAnim()
 			wep:SetPos(self.Weapon:GetPos())
 			wep:SetAngles(self.Weapon:GetAngles())
 			wep:Spawn()
+			if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
+				timer.Simple( 60, function()
+					if IsValid(wep) and !IsValid(wep.Owner) then
+						wep:Remove()
+					end
+				end)
+			end
 		end
 		self.Weapon:Remove()
-		local rag
+		local rag = self:BecomeRagdoll(DamageInfo())
 		if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 			timer.Simple( 60, function()
-				if IsValid(wep) then
-					wep:Remove()
-				end
 				if IsValid(rag) then
 					rag:Remove()
 				end
 			end)
 		end
-		rag = self:BecomeRagdoll(DamageInfo())
 	end
 end
 
