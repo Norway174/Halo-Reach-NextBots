@@ -146,6 +146,7 @@ function ENT:OnInitialize()
 --		relo(self.Weapon)
 ---		self:DoAnimationEvent(1689)
 --	end
+	self.loco:SetStepHeight(0)
 	self:SetupAnimations()
 	--self:SetPos(self:GetPos()+self:GetUp()*150)
 end

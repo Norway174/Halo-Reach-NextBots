@@ -24,6 +24,8 @@ ENT.Preset = {}
 
 ENT.IsDropship = true
 
+ENT.IsNTarget = true
+
 --ENT.TakeOffSounds = { "oddworld/strangers_wrath/dropship/fx_native4_01_drop01_takeoff.ogg", "oddworld/strangers_wrath/dropship/fx_native4_01_drop02_takeoff.ogg","oddworld/strangers_wrath/dropship/fx_native4_01_drop03_takeoff.ogg", "oddworld/strangers_wrath/dropship/fx_cargoship_fly_away.ogg" }
 ENT.SoundIdle = { "halo_reach/vehicles/tuning_fork/tuning_fork_engine/track2/loop.wav" }
 ENT.SoundIdle2 = { "halo_reach/vehicles/tuning_fork/tuning_fork_lod/track1/loop/fork_lod_01.wav", "halo_reach/vehicles/tuning_fork/tuning_fork_lod/track1/loop/fork_lod_02.wav",
@@ -142,10 +144,9 @@ end
 function ENT:OnContact( ent ) -- When we touch someBODY
 	if ent == game.GetWorld() then return self:OnTouchWorld(ent) end
 	local v = ent
-	--[[if (v.IsVJBaseSNPC == true or v.CPTBase_NPC == true or v.IsSLVBaseNPC == true or v:GetNWBool( "bZelusSNPC" ) == true) or (v:IsNPC() && v:GetClass() != "npc_bullseye" && v:Health() > 0 ) or (v:IsPlayer() and v:Alive()) or ( (v:IsNextBot()) and v != self ) then
-		local d = self:GetPos()-ent:GetPos()
-		self.loco:SetVelocity(d*0.25)
-	end]]
+	if !self.loco:IsOnGround() and (v.IsVJBaseSNPC == true or v.CPTBase_NPC == true or v.IsSLVBaseNPC == true or v:GetNWBool( "bZelusSNPC" ) == true) or (v:IsNPC() && v:GetClass() != "npc_bullseye" && v:Health() > 0 ) or (v:IsPlayer() and v:Alive()) or ( (v:IsNextBot()) and v != self ) then
+		ent:TakeDamage( 1000, self, self )
+	end
 	local tbl = {
 		HitPos = self:NearestPoint(ent:GetPos()),
 		HitEntity = self,
@@ -252,7 +253,7 @@ function ENT:DropTroops()
 	for i = 1, 4 do
 		local ent = ents.Create( typ[i] )
 		local att = self:GetAttachment(self:LookupAttachment(self.InfantryAtts[i]))
-		ent:SetPos( att.Pos+att.Ang:Forward()*100 )
+		ent:SetPos( att.Pos+att.Ang:Forward()*(50+(i*50)) )
 		ent:SetAngles( att.Ang )
 		ent:SetOwner( self )
 		ent:Spawn()

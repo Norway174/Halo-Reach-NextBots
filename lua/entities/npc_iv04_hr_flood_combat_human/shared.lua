@@ -10,7 +10,8 @@ ENT.MoveSpeedMultiplier = 5
 
 ENT.PossibleWeapons = {
 	"astw2_halo_cea_assault_rifle",
-	"astw2_halo_cea_pistol"
+	"astw2_halo_cea_pistol",
+	"astw2_halo_cea_needler"
 }
 
 ENT.VoiceType = "Flood_Human"

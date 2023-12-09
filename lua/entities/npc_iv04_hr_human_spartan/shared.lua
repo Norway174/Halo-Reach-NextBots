@@ -817,7 +817,7 @@ function ENT:OnInjured(dmg)
 	end
 	if IsValid(self.Enemy) then
 		--print(#self:PossibleTargets())
-		if rel == "foe" and !self.Switched then 
+		if rel == "foe" and ( !self.Switched or !IsValid(self.Enemy) ) then 
 			self.Switched = true
 			timer.Simple( math.random(3,6), function()
 				if IsValid(self) then

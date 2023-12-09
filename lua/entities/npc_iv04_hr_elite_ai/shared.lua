@@ -105,6 +105,70 @@ ENT.IsElite = true
 
 ENT.ActionTime = 2.5
 
+ENT.FlinchHitgroups = {
+	[7] = ACT_FLINCH_RIGHTLEG,
+	[3] = ACT_FLINCH_CHEST,
+	[2] = ACT_FLINCH_CHEST,
+	[4] = ACT_FLINCH_LEFTARM,
+	[5] = ACT_FLINCH_RIGHTARM,
+	[6] = ACT_FLINCH_LEFTLEG,
+	[1] = ACT_FLINCH_HEAD
+}
+
+ENT.FlinchAnims = {
+	["Pistol"] = {
+		[1] = "Pistol Flinch Head",
+		[2] = "Pistol Flinch Chest",
+		[3] = "Pistol Flinch Chest",
+		[4] = "Pistol Flinch Left Arm",
+		[5] = "Pistol Flinch Right Arm",
+		[6] = "Pistol Flinch Left Leg",
+		[7] = "Pistol Flinch Right Leg",
+		[8] = "Pistol Flinch Chest Back"
+	},
+	["Rifle"] = {
+		[1] = "Rifle Flinch Head",
+		[2] = "Rifle Flinch Chest",
+		[3] = "Rifle Flinch Chest",
+		[4] = "Rifle Flinch Left Arm",
+		[5] = "Rifle Flinch Right Arm",
+		[6] = "Rifle Flinch Left Leg",
+		[7] = "Rifle Flinch Right Leg",
+		[8] = "Rifle Flinch Chest Back"
+	},
+	["Sword"] = {
+		[1] = "Sword Flinch Head",
+		[2] = "Sword Flinch Chest",
+		[3] = "Sword Flinch Chest",
+		[4] = "Sword Flinch Left Arm",
+		[5] = "Sword Flinch Right Arm",
+		[6] = "Sword Flinch Left Leg",
+		[7] = "Sword Flinch Right Leg",
+		[8] = "Sword Flinch Chest Back"
+	},
+	["Hammer"] = {
+		[1] = "Hammer Flinch Head",
+		[2] = "Hammer Flinch Chest",
+		[3] = "Hammer Flinch Chest",
+		[4] = "Hammer Flinch Left Arm",
+		[5] = "Hammer Flinch Right Arm",
+		[6] = "Hammer Flinch Left Leg",
+		[7] = "Hammer Flinch Right Leg",
+		[8] = "Hammer Flinch Chest"
+	}
+}
+
+ENT.FlinchMove = {
+	[1] = 50,
+	[2] = 50,
+	[3] = 50,
+	[4] = 50,
+	[5] = 50,
+	[6] = 0,
+	[7] = 0,
+	[8] = -50
+}
+
 function ENT:OnInitialize()
 	self.AIType = GetConVar("halo_reach_nextbots_ai_type"):GetString() or self.AIType
 	self:Give(self.StartWeapons[math.random(#self.StartWeapons)])
@@ -359,6 +423,7 @@ function ENT:SetupHoldtypes()
 			[4] = "Spirit_Passenger_Exit_4"
 		}
 		if self.HammerHolds[hold] then
+			self.FlinchType = "Hammer"
 			self.IdleCalmAnim = {self:GetSequenceActivity(self:LookupSequence("Idle_Hammer"))}
 			self.IdleAnim = {self:GetSequenceActivity(self:LookupSequence("Idle_Hammer"))}
 			self.RunAnim = {self:GetSequenceActivity(self:LookupSequence("Run_Hammer")),self:GetSequenceActivity(self:LookupSequence("Run_Hammer1")),self:GetSequenceActivity(self:LookupSequence("Run_Hammer2")),self:GetSequenceActivity(self:LookupSequence("Run_Hammer3"))}
@@ -380,6 +445,7 @@ function ENT:SetupHoldtypes()
 			self.IsAChasingEnemy = true
 			self.CanMelee = false
 		elseif self.RifleHolds[hold] then
+			self.FlinchType = "Rifle"
 			self.Weapon.BurstLength = math.random(3,5)
 			self.IdleCalmAnim = {self:GetSequenceActivity(self:LookupSequence("Idle_Rifle"))}
 			self.IdleAnim = {self:GetSequenceActivity(self:LookupSequence("Idle_Rifle"))}
@@ -420,7 +486,9 @@ function ENT:SetupHoldtypes()
 			[1] = "Spirit_Passenger_Exit_1",
 			[2] = "Spirit_Passenger_Exit_2"
 		}
+		self.FlinchType = "Rifle"
 		if self.PistolHolds[hold] then
+			self.FlinchType = "Pistol"
 			self.IdleCalmAnim = {self:GetSequenceActivity(self:LookupSequence("Idle_Pistol"))}
 			self.IdleAnim = {self:GetSequenceActivity(self:LookupSequence("Idle_Pistol"))}
 			self.RunAnim = {self:GetSequenceActivity(self:LookupSequence("Run_Pistol"))}
@@ -527,6 +595,7 @@ function ENT:SetupHoldtypes()
 			self.CanCrouch = false
 			self.CanMelee = false
 		elseif hold == "melee" or hold == "knife" then
+			self.FlinchType = "Sword"
 			self.IdleCalmAnim = {self:GetSequenceActivity(self:LookupSequence("Idle_Sword"))}
 			self.IdleAnim = {self:GetSequenceActivity(self:LookupSequence("Idle_Sword"))}
 			self.RunAnim = {self:GetSequenceActivity(self:LookupSequence("Run_Sword"))}
@@ -580,6 +649,9 @@ function ENT:OnContact( ent ) -- When we touch someBODY
 	if ent:IsVehicle() and self.DriveThese[ent:GetModel()] and !self.SeenVehicles[ent] then
 		self.SeenVehicles[ent] = true
 		self.CountedVehicles = self.CountedVehicles+1
+	end
+	if (ent:GetClass() == "prop_door_rotating" or ent:GetClass() == "func_door" or ent:GetClass() == "func_door_rotating" ) then
+		ent:Fire( "Open" )
 	end
 	local tbl = {
 		HitPos = self:NearestPoint(ent:GetPos()),
@@ -1088,6 +1160,27 @@ function ENT:OnInjured(dmg)
 			self.Shield = 0 
 			if self.ShieldActual > 0 then
 				ParticleEffect( "iv04_halo_reach_elite_shield_pop", self:WorldSpaceCenter(), Angle(0,0,0), self )
+				local tr = util.TraceLine( {
+					start = dmg:GetDamagePosition(),
+					endpos = self:WorldSpaceCenter(),
+					filter = {}
+				} )
+				local hg = tr.HitGroup
+				local typ = self.FlinchAnims[self.FlinchType]
+				if self.FlinchHitgroups[hg] then
+					local seq,len = self:LookupSequence(typ[hg])
+					self.DoingFlinch = true
+					timer.Simple( len, function()
+						if IsValid(self) then
+							self.DoingFlinch = false
+						end
+					end )
+					local func = function()
+						self:PlaySequenceAndMove(seq,2,self:GetForward()*-1,self.FlinchMove[hg],0.4)
+					end
+					table.insert(self.StuffToRunInCoroutine,func)
+					self:ResetAI()
+				end
 			end
 		end
 		local shild = self.Shield
@@ -1152,7 +1245,7 @@ function ENT:OnInjured(dmg)
 			self:ResetAI()
 		end
 	end]]
-	if self:Health() - math.abs(total) < (self.StartHealth*0.5) and !self.Reacted then
+	if self:Health() - math.abs(total) < (self.StartHealth*0.5) and !self.Reacted and !self.DoingFlinch then
 		self.Reacted = true
 		if math.random(1,2) == 1 then
 			self:Speak("OnBerserk")
@@ -1161,7 +1254,6 @@ function ENT:OnInjured(dmg)
 				local anim = "Taunt_Berserk"
 				if self.IsBrute then anim = "Berserk_"..math.random(1,2).."" end
 				local act = self:GetActivity()
-				
 				self:StartActivity(self:GetSequenceActivity(self:LookupSequence(anim)))
 				self.Berserking = true
 				while (self:GetCycle() != 1 ) do
@@ -1182,7 +1274,7 @@ function ENT:OnInjured(dmg)
 			self:SetEnemy(dmg:GetAttacker())
 		end
 	else
-		if rel == "foe" and !self.Switched then 
+		if rel == "foe" and ( !self.Switched ) then 
 			self.Switched = true
 			timer.Simple( math.random(5,10), function()
 				if IsValid(self) then
@@ -2348,10 +2440,12 @@ function ENT:DoKilledAnim()
 			self:Speak("OnDeath")
 			local anim = self:DetermineDeathAnim(self.KilledDmgInfo)
 			if anim == true then 
-				local wep = ents.Create(self.Weapon:GetClass())
-				wep:SetPos(self.Weapon:GetPos())
-				wep:SetAngles(self.Weapon:GetAngles())
-				wep:Spawn()
+				if IV04_DropWeapons then
+					local wep = ents.Create(self.Weapon:GetClass())
+					wep:SetPos(self.Weapon:GetPos())
+					wep:SetAngles(self.Weapon:GetAngles())
+					wep:Spawn()
+				end
 				self.Weapon:Remove()
 				local rag = self:BecomeRagdoll(DamageInfo())
 				return
@@ -2359,15 +2453,17 @@ function ENT:DoKilledAnim()
 			local seq, len = self:LookupSequence(anim)
 			timer.Simple( len, function()
 				if IsValid(self) then
-					local wep = ents.Create(self.Weapon:GetClass())
-					wep:SetPos(self.Weapon:GetPos())
-					wep:SetAngles(self.Weapon:GetAngles())
-					wep:Spawn()
+					if IV04_DropWeapons then
+						local wep = ents.Create(self.Weapon:GetClass())
+						wep:SetPos(self.Weapon:GetPos())
+						wep:SetAngles(self.Weapon:GetAngles())
+						wep:Spawn()
+					end
 					self.Weapon:Remove()
 					local rag
 					if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 						timer.Simple( 60, function()
-							if IsValid(wep) then
+							if IsValid(wep) and !IsValid(wep:GetOwner()) then
 								wep:Remove()
 							end
 							if IsValid(rag) then
@@ -2381,15 +2477,17 @@ function ENT:DoKilledAnim()
 			self:PlaySequenceAndPWait(seq, 1, self:GetPos())
 		else
 			self:Speak("OnDeathPainful")
-			local wep = ents.Create(self.Weapon:GetClass())
-			wep:SetPos(self.Weapon:GetPos())
-			wep:SetAngles(self.Weapon:GetAngles())
-			wep:Spawn()
+			if IV04_DropWeapons then
+				local wep = ents.Create(self.Weapon:GetClass())
+				wep:SetPos(self.Weapon:GetPos())
+				wep:SetAngles(self.Weapon:GetAngles())
+				wep:Spawn()
+			end
 			self.Weapon:Remove()
 			local rag
 			if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 				timer.Simple( 60, function()
-					if IsValid(wep) then
+					if IsValid(wep) and !IsValid(wep.Owner) then
 						wep:Remove()
 					end
 					if IsValid(rag) then
@@ -2417,10 +2515,12 @@ function ENT:DoKilledAnim()
 		else
 			self:PlaySequenceAndWait("Dead_Land")
 		end
-		local wep = ents.Create(self.Weapon:GetClass())
-		wep:SetPos(self.Weapon:GetPos())
-		wep:SetAngles(self.Weapon:GetAngles())
-		wep:Spawn()
+		if IV04_DropWeapons then
+			local wep = ents.Create(self.Weapon:GetClass())
+			wep:SetPos(self.Weapon:GetPos())
+			wep:SetAngles(self.Weapon:GetAngles())
+			wep:Spawn()
+		end
 		self.Weapon:Remove()
 		local rag
 		if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
@@ -2508,7 +2608,8 @@ end
 
 function ENT:BodyUpdate()
 	local act = self:GetActivity()
-	if !self.loco:GetVelocity():IsZero() and self.loco:IsOnGround() then
+	if !self.loco:GetVelocity():IsZero() and self.loco:IsOnGround() and self.loco:IsAttemptingToMove() then
+		self.LastLocoVel = self.loco:GetVelocity() -- Last direction we are heading towards that works
 		if !self.LMove then
 			if self.VoiceType == "Elite" then self.LMove = CurTime()+0.35
 					else self.LMove = CurTime()+0.43

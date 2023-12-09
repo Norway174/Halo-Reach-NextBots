@@ -22,7 +22,7 @@ ENT.NUT = 0
 
 ENT.Preset = {}
 
-ENT.FriendlyToPlayers = true
+ENT.FriendlyToPlayers = GetConVar("halo_reach_nextbots_ai_hostile_humans"):GetInt() != 1
 
 ENT.CustomIdle = true
 
@@ -47,7 +47,19 @@ function ENT:BeforeThink()
 	--self:StartActivity(ACT_IDLE)
 end
 
-ENT.Quotes = {}
+ENT.Quotes = {
+	["Rotate"] = {
+		"halo_reach/vehicles/anti_infantry_turret/ai_turret_traverse/ai_turret_traverse/loop/ai_turret_traverse_lp1.wav",
+		"halo_reach/vehicles/anti_infantry_turret/ai_turret_traverse/ai_turret_traverse/loop/ai_turret_traverse_lp2.wav",
+		"halo_reach/vehicles/anti_infantry_turret/ai_turret_traverse/ai_turret_traverse/loop/ai_turret_traverse_lp3.wav"
+	},
+	["Activate"] = {
+		"halo_reach/vehicles/aa_turret/aa_turret_open.ogg"
+	},
+	["Deactivate"] = {
+		"halo_reach/vehicles/aa_turret/aa_turret_close.ogg"
+	}
+}
 
 function ENT:Speak(quote)
 	local tbl = self.Quotes[quote]
@@ -64,7 +76,9 @@ end
 
 function ENT:OnInitialize()
 	--self:SetSolidMask(MASK_NPCSOLID_BRUSHONLY)
+	self.FriendlyToPlayers = GetConVar("halo_reach_nextbots_ai_hostile_humans"):GetInt() != 1
 	self:SetBloodColor( BLOOD_COLOR_MECH )
+	self:Speak("Activate")
 	--snd = table.Random(self.SoundIdle)
 	--self:SetCollisionBounds(mins+Vector(50,50,30),maxs+Vector(-50,-50,-30))
 	--print(who)
@@ -193,10 +207,10 @@ function ENT:BodyUpdate()
 		y = an.y
 		di = math.AngleDifference(self:GetAngles().y,y)
 		p = an.p
-		dip = math.AngleDifference(self:GetAngles().p,p)
 			if !self.Transitioned then
 				local vy = math.AngleDifference(self:GetAngles().y+self.LTPP,y)
-				local vp = math.AngleDifference(self:GetAngles().p+self.LTP,p)
+				local vp = math.AngleDifference(self:GetAngles().p+(self.LTP),p)
+				--print(p,vp,self.LTP)
 				self.Transitioned = true
 				timer.Simple(0.01, function()
 					if IsValid(self) then
@@ -214,18 +228,20 @@ function ENT:BodyUpdate()
 					end
 					self:SetPoseParameter("aim_yaw",self.LTPP+i)
 					self.GunnerShoot = false
+					if !self.VSound then self:Speak("Rotate") end
 				else
+					if self.VSound then self.VSound:Stop() end
 					self.GunnerShoot = true
 				end
-				if math.abs(vp) > 2 then
+				if math.abs(vp) > 3 then
 					self.LTP = self:GetPoseParameter("aim_pitch")
 					local i
-					if (vp) <= self.LTP then
-						i = 1
+					if (vp) <= (self.LTP*2) then
+						i = 0.5
 					else
-						i = -1
+						i = -0.5
 					end
-					self:SetPoseParameter("aim_pitch",self.LTP+i)
+					self:SetPoseParameter("aim_pitch",(self.LTP+i))
 				end
 			end
 	end

@@ -16,6 +16,10 @@ ENT.SearchJustAsSpawned = false
 
 ENT.RunBehaviourTime = 0
 
+ENT.PrintName = "Scarab"
+
+ENT.IsScarab = true
+
 ENT.Voices = {
 	["Scarab"] = {
 		["Spawned"] = {
@@ -228,6 +232,7 @@ end
 function ENT:OnInitialize()
 	self:SetBloodColor(BLOOD_COLOR_MECH)
 	self:SetHealth(self.StartHealth*(GetConVar("halo_reach_nextbots_ai_difficulty"):GetInt()/2))
+	--self:SetSurroundingBoundsType(BOUNDS_HITBOXES)
 	local tr = util.TraceLine( {
 		start = self:GetPos(),
 		endpos = self:GetPos()+Vector(0,0,10000000000),
@@ -446,10 +451,11 @@ function ENT:DoKilledAnim()
 					v:TakeDamageInfo(dmg)
 				end
 			end
+			util.ScreenShake( self:GetPos(), 500, 500, 3, 4096 )
 			for k, v in pairs(player.GetAll()) do
 				if self:GetRangeSquaredTo(v:WorldSpaceCenter()) < 8096^2 then
 					v:SetNWBool("FoolNearBoom",true)
-					timer.Simple( 5, function()
+					timer.Simple( 3.12, function()
 						if IsValid(v) then v:SetNWBool("FoolNearBoom",false) end
 					end )
 				end

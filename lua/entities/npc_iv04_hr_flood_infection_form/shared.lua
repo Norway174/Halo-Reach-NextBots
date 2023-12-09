@@ -13,7 +13,14 @@ ENT.Faction = "FACTION_FLOOD"
 ENT.MoveSpeed = 200
 ENT.MoveSpeedMultiplier = 1 -- When running, the move speed will be x times faster
 ENT.PrintName = "Flood Infection Form"
-
+ENT.OnMove = { "halo_reach/characters/flood/infection/move/infector sound 10.ogg", "halo_reach/characters/flood/infection/move/infector sound 12.ogg",
+			"halo_reach/characters/flood/infection/move/infector sound 14.ogg", "halo_reach/characters/flood/infection/move/infector sound 16.ogg",
+			"halo_reach/characters/flood/infection/move/infector sound 18.ogg", "halo_reach/characters/flood/infection/move/infector sound 2.ogg",
+			"halo_reach/characters/flood/infection/move/infector sound 21.ogg", "halo_reach/characters/flood/infection/move/infector sound 21.ogg",
+			"halo_reach/characters/flood/infection/move/infector sound 25.ogg", "halo_reach/characters/flood/infection/move/infector sound 27.ogg",
+			"halo_reach/characters/flood/infection/move/infector sound 29.ogg", "halo_reach/characters/flood/infection/move/infector sound 30.ogg",
+			"halo_reach/characters/flood/infection/move/infector sound 5.ogg", "halo_reach/characters/flood/infection/move/infector sound 7.ogg",
+			"halo_reach/characters/flood/infection/move/infector sound 9.ogg" }
 ENT.MeleeRange = 200
 
 ENT.IdleSoundDelay = 8
@@ -135,7 +142,8 @@ end
 function ENT:BeforeThink()
 	if self.NISound < CurTime() then
 		self.NISound = CurTime()+20
-		self:Speak("OnMove")
+		-- self:Speak("OnMove")
+		-- self:EmitSound( self.OnMove[math.random(1,#self.OnMove)] )
 	end
 end
 
@@ -202,6 +210,7 @@ end
 function ENT:DoMeleeDamage()
 	local victim = self:GetOwner()
 	victim:TakeDamage( self.MeleeDamage, self, self )
+	
 end
 
 ENT.NextBite = 0
@@ -213,7 +222,7 @@ if SERVER then
 			if self.NextBite < CurTime() then
 				self:DoMeleeDamage()
 				self.NextBite = CurTime()+1
-				self:Speak("OnBite")
+				self:Speak("OnFeed")
 			end
 			self.DirToEnemy = (self:GetOwner():NearestPoint(self:GetPos())-self:GetPos()):Angle()
 			self:SetAngles(Angle(90,self.DirToEnemy.y,0))
@@ -260,6 +269,7 @@ end
 
 function ENT:OnContact( ent )
 	if ent == game.GetWorld() then return end
+	
 	local tbl = {
 		HitPos = self:NearestPoint(ent:GetPos()),
 		HitEntity = self,
@@ -293,6 +303,7 @@ function ENT:OnContact( ent )
 				end
 			end )
 			local func = function()
+				self:Speak("OnLatchBite")
 				self:ResetSequence("Wrestle")
 				while (self.Latched and IsValid(self.Enemy)) and !stop do
 					if self:GetCycle() >= 0.9 then
@@ -433,10 +444,29 @@ function ENT:Climb(path)
 	self.loco:SetGravity(600)
 end
 
+function ENT:FootstepSound()
+	local character = self.Voices[self.VoiceType]
+	if character["OnMove"] and istable(character["OnMove"]) then
+		local sound = table.Random(character["OnMove"])
+		self:EmitSound(sound,60)
+	end
+end
+
 function ENT:BodyUpdate()
 	local act = self:GetActivity()
 	if act == self.RunAnim[1] then
 		self:BodyMoveXY()
+		
+	end
+	if !self.loco:GetVelocity():IsZero() and self.loco:IsOnGround() then
+	if !self.LMove then
+			self.LMove = CurTime()+0.4
+		else
+			if self.LMove < CurTime() then
+				self:FootstepSound()
+				self.LMove = CurTime()+0.4
+			end
+		end
 	end
 	self:FrameAdvance()
 end

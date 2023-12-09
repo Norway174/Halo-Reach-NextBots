@@ -168,6 +168,9 @@ function ENT:OnInitialize()
 	if !self.VoiceType then
 		self.VoiceType = self.PossibleVoices[math.random(#self.PossibleVoices)]
 	end
+	if self.FriendlyToPlayers then
+		self.FriendlyToPlayers = GetConVar("halo_reach_nextbots_ai_hostile_humans"):GetInt() != 1
+	end
 	self:SetBloodColor(DONT_BLEED)
 	self.AIType = GetConVar("halo_reach_nextbots_ai_type"):GetString() or self.AIType
 	self:DoInit()
@@ -662,7 +665,7 @@ function ENT:OnInjured(dmg)
 	end
 	if IsValid(self.Enemy) then
 		--print(#self:PossibleTargets())
-		if rel == "foe" and !self.Switched then 
+		if rel == "foe" and ( !self.Switched ) then 
 			self.Switched = true
 			timer.Simple( math.random(3,6), function()
 				if IsValid(self) then
@@ -1412,7 +1415,7 @@ function ENT:CustomBehaviour(ent,range)
 		if self:HasToReload() then
 			reloaded = true
 			local r = math.random(3,4)
-			local tbl,dire = self:FindCoverSpots(ent,r)
+			local tbl,dire = self:FindCoverSpots(ent)
 			if table.Count(tbl) > 0 or #tbl > 0 then
 				local area = table.Random(tbl)
 				self:MoveToPosition( area, self.RunAnim[math.random(1,#self.RunAnim)], self.MoveSpeed*self.MoveSpeedMultiplier )
@@ -1966,7 +1969,7 @@ function ENT:ChaseEnt(ent,los)
 			elseif los and cansee and dist < self.ShootDist^2 then
 				return "Obtained range"
 			end
-			if self.loco:GetVelocity():IsZero() and self.loco:IsAttemptingToMove() then
+			if self:IsStuck() then
 				-- We are stuck, don't bother
 				return "Give up"
 			end
@@ -2176,7 +2179,8 @@ function ENT:DoAnimationEvent(a)
 		if !CLIENT then
 			--local set = self.AnimSets[self.Weapon:GetClass()] or self.AnimSets["Rifle"]
 			local a,len = self:LookupSequence(self:SelectWeightedSequence(self.ReloadAnim))
-			if !self.SayingOnReload and self:Health() > 0 and IsValid(self.Enemy) then
+			self.StopShoot = true
+			if !self.SayingOnReload and self.BehaveThread and IsValid(self.Enemy) then
 				self.SayingOnReload = true
 				self:Speak("OnReload")
 				timer.Simple( math.random(8,15), function()
@@ -2248,10 +2252,12 @@ function ENT:DoKilledAnim()
 			self:Speak("OnDeath")
 			local anim = self:DetermineDeathAnim(self.KilledDmgInfo)
 			if anim == true then 
-				local wep = ents.Create(self.Weapon:GetClass())
-				wep:SetPos(self.Weapon:GetPos())
-				wep:SetAngles(self.Weapon:GetAngles())
-				wep:Spawn()
+				if IV04_DropWeapons then
+					local wep = ents.Create(self.Weapon:GetClass())
+					wep:SetPos(self.Weapon:GetPos())
+					wep:SetAngles(self.Weapon:GetAngles())
+					wep:Spawn()
+				end
 				self.Weapon:Remove()
 				local rag = self:CreateRagdoll(self.KilledDmgInfo)
 				if self.GetPlayerColor then
@@ -2265,15 +2271,17 @@ function ENT:DoKilledAnim()
 			local seq, len = self:LookupSequence(anim)
 			timer.Simple( len, function()
 				if IsValid(self) then
-					local wep = ents.Create(self.Weapon:GetClass())
-					wep:SetPos(self.Weapon:GetPos())
-					wep:SetAngles(self.Weapon:GetAngles())
-					wep:Spawn()
+					if IV04_DropWeapons then
+						local wep = ents.Create(self.Weapon:GetClass())
+						wep:SetPos(self.Weapon:GetPos())
+						wep:SetAngles(self.Weapon:GetAngles())
+						wep:Spawn()
+					end
 					self.Weapon:Remove()
 					local rag
 					if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 						timer.Simple( 60, function()
-							if IsValid(wep) then
+							if IsValid(wep) and !IsValid(wep:GetOwner()) then
 								wep:Remove()
 							end
 							if IsValid(rag) then
@@ -2294,15 +2302,17 @@ function ENT:DoKilledAnim()
 			self:PlaySequenceAndPWait(seq, 1, self:GetPos())
 		else
 			self:Speak("OnDeathPainful")
-			local wep = ents.Create(self.Weapon:GetClass())
-			wep:SetPos(self.Weapon:GetPos())
-			wep:SetAngles(self.Weapon:GetAngles())
-			wep:Spawn()
+			if IV04_DropWeapons then
+				local wep = ents.Create(self.Weapon:GetClass())
+				wep:SetPos(self.Weapon:GetPos())
+				wep:SetAngles(self.Weapon:GetAngles())
+				wep:Spawn()
+			end
 			self.Weapon:Remove()
 			local rag
 			if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 				timer.Simple( 60, function()
-					if IsValid(wep) then
+					if IsValid(wep) and !IsValid(wep.Owner) then
 						wep:Remove()
 					end
 					if IsValid(rag) then
@@ -2350,10 +2360,12 @@ function ENT:DoKilledAnim()
 			coroutine.wait(0.01)
 		end
 		self:PlaySequenceAndWait("Dead_Land")
-		local wep = ents.Create(self.Weapon:GetClass())
-		wep:SetPos(self.Weapon:GetPos())
-		wep:SetAngles(self.Weapon:GetAngles())
-		wep:Spawn()
+		if IV04_DropWeapons then
+			local wep = ents.Create(self.Weapon:GetClass())
+			wep:SetPos(self.Weapon:GetPos())
+			wep:SetAngles(self.Weapon:GetAngles())
+			wep:Spawn()
+		end
 		self.Weapon:Remove()
 		local rag
 		if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then

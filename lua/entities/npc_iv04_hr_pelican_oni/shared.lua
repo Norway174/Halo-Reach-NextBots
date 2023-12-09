@@ -588,6 +588,7 @@ function ENT:OnKilled( dmginfo ) -- When killed
 					phys:SetMass( phys:GetMass()*10 )
 				end
 			end
+			util.ScreenShake( self:GetPos(), 500, 500, 3, 4096 )
 			ParticleEffect("halo_reach_explosion_unsc_large",self:GetPos()+self:GetUp()*140,self:GetAngles()+Angle(-90,0,0),nil)
 			self:Remove()
 		end

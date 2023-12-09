@@ -139,6 +139,16 @@ function ENT:OnInjured(dmg)
 	if rel == "friend" and !dmg:GetAttacker():IsPlayer() then
 		dmg:ScaleDamage(0)
 		return 
+	elseif rel == "foe" then
+		if !self.Switched then
+			self.Switched = true
+			timer.Simple( 5, function()
+				if IsValid(self) then
+					self.Switched = false
+				end
+			end )
+			self:SetEnemy(dmg:GetAttacker())
+		end
 	end
 end
 
@@ -275,6 +285,8 @@ function ENT:OnKilled(dmginfo)
 	end
 	self:Remove()
 end
+
+
 
 function ENT:BodyUpdate()
 	local act = self:GetActivity()

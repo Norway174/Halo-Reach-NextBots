@@ -6,7 +6,7 @@ ENT.Base 			= "npc_iv04_base"
 ENT.PrintName = "Gúta"
 ENT.StartHealth = 600
 ENT.MoveSpeed = 50
-ENT.MoveSpeedMultiplier = 7
+ENT.MoveSpeedMultiplier = 12
 ENT.BehaviourType = 3
 ENT.BulletNumber = 1
 ENT.IdleSoundDelay = math.random(6,10)
@@ -211,7 +211,7 @@ function ENT:OnInjured(dmg)
 		ParticleEffect( "halo_reach_blood_impact_human", dmg:GetDamagePosition(), Angle(0,0,0), self )
 	end
 	if !IsValid(self.Enemy) then
-		if self:CheckRelationships(dmg:GetAttacker()) == "foe" then
+		if rel == "foe" then
 			--self:Speak("Surprise")
 			self:SetEnemy(dmg:GetAttacker())
 		end
@@ -223,6 +223,17 @@ function ENT:OnInjured(dmg)
 				self:Speak("OnHurt")
 			end
 			self.NPSound = CurTime()+math.random(2,5)
+		end
+		if rel == "foe" then
+			if !self.Switched then
+				self.Switched = true
+				timer.Simple( 5, function()
+					if IsValid(self) then
+						self.Switched = false
+					end
+				end )
+				self:SetEnemy(dmg:GetAttacker())
+			end
 		end
 	end
 end

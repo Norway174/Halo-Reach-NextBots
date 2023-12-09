@@ -111,12 +111,23 @@ local tbl5 = {
 	l = 140
 }
 
+local tbl6 = {
+    c = "Options",
+    name = "Ivan04",
+    sc = "Halo Reach NextBots",
+    id = "Halo_Reach_NextBots",
+    dv = 0,
+    d = "Should the humans be hostile to players?",
+    cv = "halo_reach_nextbots_ai_hostile_humans"
+}
+
 IV04AddMenuOption( tbl )
 IV04AddMenuOption( tbl1 )
 IV04AddMenuOption( tbl2 )
 IV04AddMenuOption( tbl3 )
 IV04AddMenuOption( tbl4 )
 IV04AddMenuOption( tbl5 )
+IV04AddMenuOption( tbl6 )
 
 HRShieldMaterial = Material("models/halo_reach/characters/covenant/elite/minor/energy_shield")
 
@@ -147,8 +158,62 @@ local tab = {
 	[ "$pp_colour_mulb" ] = 0.11
 }
 
+local registeredply = {}
+
 hook.Add( "RenderScreenspaceEffects", "GetAwayItsGonnaBlow", function()
-	if LocalPlayer():GetNWBool("FoolNearBoom") then
+	local ply = LocalPlayer()
+	if ply:GetNWBool("FoolNearBoom") then
+		if !registeredply[ply] then
+			local original = tab
+			registeredply[ply] = {
+				[ "$pp_colour_addr" ] = 0,
+				[ "$pp_colour_addg" ] = 0,
+				[ "$pp_colour_addb" ] = 0.2*0.1,
+				[ "$pp_colour_brightness" ] = -0.04*0.1,
+				[ "$pp_colour_contrast" ] = 2.26,
+				[ "$pp_colour_colour" ] = 1.62,
+				[ "$pp_colour_mulr" ] = 0,
+				[ "$pp_colour_mulg" ] = 0.7,--*0.1,
+				[ "$pp_colour_mulb" ] = 0.11--*0.1
+			}
+			timer.Simple( 3.12, function()
+				if IsValid(ply) then registeredply[ply] = nil end
+			end )
+			for i = 1, 10 do
+				timer.Simple( 0.02*i, function()
+					if IsValid(ply) then
+						registeredply[ply] = {
+							[ "$pp_colour_addr" ] = 0,
+							[ "$pp_colour_addg" ] = 0,
+							[ "$pp_colour_addb" ] = 0.2*(i/10),
+							[ "$pp_colour_brightness" ] = -0.04*(i/10),
+							[ "$pp_colour_contrast" ] = 2.26*(i/10),
+							[ "$pp_colour_colour" ] = 1.62,
+							[ "$pp_colour_mulr" ] = 0,
+							[ "$pp_colour_mulg" ] = 0.7,--*(i/10),
+							[ "$pp_colour_mulb" ] = 0.11--*(i/10)
+						}
+					end
+				end )
+				timer.Simple( (0.145*i)+1.67, function()
+					if IsValid(ply) then
+						registeredply[ply] = {
+							[ "$pp_colour_addr" ] = 0,
+							[ "$pp_colour_addg" ] = 0,
+							[ "$pp_colour_addb" ] = (0.2-(0.02*i)),
+							[ "$pp_colour_brightness" ] = (-0.04+(0.004*i)),
+							[ "$pp_colour_contrast" ] = (3.26-(0.226*i)),
+							[ "$pp_colour_colour" ] = (2.62-(0.162*i)),
+							[ "$pp_colour_mulr" ] = 0,
+							[ "$pp_colour_mulg" ] = (0.7-(0.07*i)),--*(1-(0.1*i)),
+							[ "$pp_colour_mulb" ] = (0.11-(0.011*i))--*(1-(0.1*i))
+						}
+					end
+				end )
+			end
+		else
+			tab = registeredply[ply]
+		end
 		DrawColorModify( tab )
 		DrawToyTown(2, ScrH() / 2)
 		DrawSharpen( 1.2, 1.2 )

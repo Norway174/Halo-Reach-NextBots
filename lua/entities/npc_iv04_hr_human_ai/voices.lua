@@ -6071,6 +6071,20 @@ ENT.Voices = {
 			"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn/warn3.ogg", "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn/warn4.ogg",
 			"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn/warn5.ogg", "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn/warn6.ogg",
 			"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn/warn7.ogg" },
+["OnSeeFlood"] = { "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_flood/warn_flood1.ogg", 
+	"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_flood/warn_flood2.ogg"
+},
+["OnSeePureFlood"] = { "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_pureforms/warn_pureforms1.ogg", 
+	"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_pureforms/warn_pureforms3.ogg"
+},
+["OnFloodCarrierExplode"] = { "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_incmn_fldbm/warn_incmn_fldbm1.ogg", 
+	"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_incmn_fldbm/warn_incmn_fldbm2.ogg",
+	"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_incmn_fldbm/warn_incmn_fldbm3.ogg"
+},
+["OnFloodRevive"] = { "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_fldreanimate/warn_fld_reanimate1.ogg", 
+	"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_fldreanimate/warn_fld_reanimate2.ogg",
+	"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_fldreanimate/warn_fld_reanimate3.ogg"
+},
 ["OnWarnIncoming"] = { "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_incmn/warn_incmn1.ogg", "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_incmn/warn_incmn2.ogg",
 			"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_incmn/warn_incmn3.ogg", "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_incmn/warn_incmn4.ogg",
 			"halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_incmn/warn_incmn5.ogg", "halo_reach/dialog/combat/trooper_sgt3/02_danger/warn_incmn/warn_incmn6.ogg" },

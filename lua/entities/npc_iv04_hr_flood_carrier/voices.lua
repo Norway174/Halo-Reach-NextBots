@@ -15,5 +15,6 @@ ENT.Voices = {
 			"halo_reach/characters/flood/carrier/24/carsnd4_24.ogg", "halo_reach/characters/flood/carrier/24/carsnd5_24.ogg", "halo_reach/characters/flood/carrier/24/carsnd6_24.ogg",
 			"halo_reach/characters/flood/carrier/24/carsnd7_24.ogg", "halo_reach/characters/flood/carrier/24/carsnd8_24.ogg", "halo_reach/characters/flood/carrier/24/carsnd9_24.ogg" }
 	
-	}
+	},
+["OnStep"] = { "halo_reach/characters/footsteps/flood/mud/shuffle/shuf3a.ogg", "halo_reach/characters/footsteps/flood/mud/shuffle/shuf3b.ogg", "halo_reach/characters/footsteps/flood/mud/shuffle/shuf3c.ogg" }
 }

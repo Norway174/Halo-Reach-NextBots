@@ -22,7 +22,7 @@ ENT.NUT = 0
 
 ENT.Preset = {}
 
-ENT.FriendlyToPlayers = true
+ENT.FriendlyToPlayers = GetConVar("halo_reach_nextbots_ai_hostile_humans"):GetInt() != 1
 
 ENT.CustomIdle = true
 
@@ -59,6 +59,7 @@ end
 
 function ENT:OnInitialize()
 	--self:SetSolidMask(MASK_NPCSOLID_BRUSHONLY)
+	self.FriendlyToPlayers = GetConVar("halo_reach_nextbots_ai_hostile_humans"):GetInt() != 1
 	self:SetBloodColor( BLOOD_COLOR_MECH )
 	self:SetPos(self:GetPos()+self:GetUp()*190)
 	self:SetCollisionBounds(Vector(-40,-40,-157),Vector(40,40,160))
@@ -163,10 +164,13 @@ if SERVER then
 								local bullet = {}
 								bullet.Attacker = self
 								bullet.TracerName = "effect_astw2_halo_ce_tracer_ar"
-								bullet.Damage = 24
+								bullet.Damage = 30
 								bullet.Spread = Vector( 0.01, 0.01 )
 								bullet.Src = att.Pos
 								bullet.Dir = self:GetAimVector()
+								bullet.Callback = function(ent,trace,dmg)
+									dmg:SetDamageType(DMG_BLAST)
+								end
 								ParticleEffect( "astw2_halo_3_muzzle_machine_gun_turret", att.Pos, att.Ang, self )
 								sound.Play("halo_reach/vehicles/anti_air_cannon/aa_cannon_looping_mt/aa_cannon_loop/out.ogg",self:GetShootPos(),100)
 								self:FireBullets( bullet )
@@ -194,46 +198,56 @@ function ENT:BodyUpdate()
 	if IsValid(self.Enemy) then
 		goal = self.Enemy:WorldSpaceCenter()
 		local an = (goal-self:GetAttachment(1).Pos):Angle()
+		self.LTP = self:GetPoseParameter("aim_pitch")
+		local rel = self.LTP*(math.abs(self.LTP)/70)
 		y = an.y
-		di = math.AngleDifference(self:GetAngles().y,y)
 		p = an.p
-		dip = math.AngleDifference(self:GetAngles().p,p)
-			if !self.Transitioned then
-				local vy = math.AngleDifference(self:GetAngles().y+self.LTPP,y)
-				local vp = math.AngleDifference(self:GetAngles().p+self.LTP,p)+20
-				self.Transitioned = true
-				timer.Simple(0.01, function()
-					if IsValid(self) then
-						self.Transitioned = false
-					end
-				end )
-				--print(vy,vp)
-				if math.abs(vy) > 2 then
-					self.LTPP = self:GetPoseParameter("aim_yaw")
-					local i
-					if vy < 0 then
-						i = 0.75
-					else
-						i = -0.75
-					end
-					self:SetPoseParameter("aim_yaw",self.LTPP+i)
-					self.GunnerShoot = false
-					if !self.VSound then self:Speak("Rotate") end
+		dip = math.AngleDifference(self:GetAngles().p+(self.LTP),p)
+		if !self.Transitioned then
+			local vy = math.AngleDifference(self:GetAngles().y+self.LTPP,y)
+			local vp = dip
+			self.Transitioned = true
+			timer.Simple(0.01, function()
+				if IsValid(self) then
+					self.Transitioned = false
+				end
+			end )
+			--print(vy,vp)
+			if math.abs(vy) > 2 then
+				self.LTPP = self:GetPoseParameter("aim_yaw")
+				local i
+				if vy < 0 then
+					i = 0.75
 				else
-					if self.VSound then self.VSound:Stop() end
-					self.GunnerShoot = true
+					i = -0.75
 				end
-				if math.abs(vp) > 2 then
-					self.LTP = self:GetPoseParameter("aim_pitch")
-					local i
-					if (vp) <= self.LTP then
-						i = 1
-					else
-						i = -1
-					end
-					self:SetPoseParameter("aim_pitch",self.LTP+i)
-				end
+				self:SetPoseParameter("aim_yaw",self.LTPP+i)
+				self.GunnerShoot = false
+				self:DoGesture("Attack",false)
+				if !self.VSound then self:Speak("Rotate") end
+			else
+				if self.VSound then self.VSound:Stop() end
+				self:RemoveAllGestures()
+				self.GunnerShoot = true
 			end
+			--if vp < -90 then vp = vp+360 end
+			--if vp > 90 then vp = vp - 180 end
+			local total = math.abs(vp)-20
+			--print(p,vp,self.LTP)
+			if total > 3 then
+				local i
+				if vp <= -90 or self.LTP > (vp-20) then
+					--print("increase")
+					i = 1
+				else
+					--print("decrease")
+					i = -1
+				end
+				local val = self.LTP+i
+				--if val <= -90 then val = -89 end
+				self:SetPoseParameter("aim_pitch",val)
+			end
+		end
 	end
 	self:FrameAdvance()
 end

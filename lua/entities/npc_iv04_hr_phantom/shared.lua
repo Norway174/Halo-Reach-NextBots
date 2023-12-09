@@ -831,10 +831,11 @@ function ENT:OnKilled( dmginfo ) -- When killed
 					phys:SetMass( phys:GetMass()*10 )
 				end
 			end
+			util.ScreenShake( self:GetPos(), 500, 500, 3, 4096 )
 			for k, v in pairs(player.GetAll()) do
 				if self:GetRangeSquaredTo(v:WorldSpaceCenter()) < 4096^2 then
 					v:SetNWBool("FoolNearBoom",true)
-					timer.Simple( 5, function()
+					timer.Simple( 3.12, function()
 						if IsValid(v) then v:SetNWBool("FoolNearBoom",false) end
 					end )
 				end

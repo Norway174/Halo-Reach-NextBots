@@ -388,7 +388,7 @@ function ENT:OnInjured(dmg)
 	if dmg:GetDamage() < 1 then return end
 	ParticleEffect( "halo_reach_blood_impact_jackal", dmg:GetDamagePosition(), Angle(0,0,0), self )
 	if !IsValid(self.Enemy) then
-		if self:CheckRelationships(dmg:GetAttacker()) == "foe" then
+		if rel == "foe" then
 			self:Speak("OnSurprise")
 			self:SetEnemy(dmg:GetAttacker())
 		end
@@ -401,12 +401,22 @@ function ENT:OnInjured(dmg)
 			end
 			self.NPSound = CurTime()+math.random(2,5)
 		end
-		if self:CheckRelationships(dmg:GetAttacker()) == "friend" then
+		if rel == "friend" then
 			timer.Simple( math.random(2,3), function()
 				if IsValid(self) then
 					--self:Speak("HurtFriend")
 				end
 			end )
+		elseif rel == "foe" then
+			if !self.Switched then
+				self.Switched = true
+				timer.Simple( 5, function()
+					if IsValid(self) then
+						self.Switched = false
+					end
+				end )
+				self:SetEnemy(dmg:GetAttacker())
+			end
 		end
 	end
 end
@@ -1217,10 +1227,12 @@ function ENT:DoKilledAnim()
 			self:Speak("OnDeath")
 			local anim = self:DetermineDeathAnim(self.KilledDmgInfo)
 			if anim == true then 
-				local wep = ents.Create(self.Weapon:GetClass())
-				wep:SetPos(self.Weapon:GetPos())
-				wep:SetAngles(self.Weapon:GetAngles())
-				wep:Spawn()
+				if IV04_DropWeapons then
+					local wep = ents.Create(self.Weapon:GetClass())
+					wep:SetPos(self.Weapon:GetPos())
+					wep:SetAngles(self.Weapon:GetAngles())
+					wep:Spawn()
+				end
 				self.Weapon:Remove()
 				self:CreateRagdoll(DamageInfo())
 				
@@ -1236,10 +1248,12 @@ function ENT:DoKilledAnim()
 			local seq, len = self:LookupSequence(anim)
 			timer.Simple( len, function()
 				if IsValid(self) then
-					local wep = ents.Create(self.Weapon:GetClass())
-					wep:SetPos(self.Weapon:GetPos())
-					wep:SetAngles(self.Weapon:GetAngles())
-					wep:Spawn()
+					if IV04_DropWeapons then
+						local wep = ents.Create(self.Weapon:GetClass())
+						wep:SetPos(self.Weapon:GetPos())
+						wep:SetAngles(self.Weapon:GetAngles())
+						wep:Spawn()
+					end
 					self.Weapon:Remove()
 					if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 						timer.Simple( 60, function()
@@ -1254,10 +1268,12 @@ function ENT:DoKilledAnim()
 			self:PlaySequenceAndPWait(seq, 1, self:GetPos())
 		else
 			self:Speak("OnDeathPainful")
-			local wep = ents.Create(self.Weapon:GetClass())
-			wep:SetPos(self.Weapon:GetPos())
-			wep:SetAngles(self.Weapon:GetAngles())
-			wep:Spawn()
+			if IV04_DropWeapons then
+				local wep = ents.Create(self.Weapon:GetClass())
+				wep:SetPos(self.Weapon:GetPos())
+				wep:SetAngles(self.Weapon:GetAngles())
+				wep:Spawn()
+			end
 			self.Weapon:Remove()
 			if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 				timer.Simple( 60, function()
@@ -1295,10 +1311,12 @@ function ENT:DoKilledAnim()
 			coroutine.wait(0.01)
 		end
 		self:PlaySequenceAndWait("Dead_Land")
-		local wep = ents.Create(self.Weapon:GetClass())
-		wep:SetPos(self.Weapon:GetPos())
-		wep:SetAngles(self.Weapon:GetAngles())
-		wep:Spawn()
+		if IV04_DropWeapons then
+			local wep = ents.Create(self.Weapon:GetClass())
+			wep:SetPos(self.Weapon:GetPos())
+			wep:SetAngles(self.Weapon:GetAngles())
+			wep:Spawn()
+		end
 		self.Weapon:Remove()
 		if GetConVar( "ai_serverragdolls" ):GetInt() == 0 then
 			timer.Simple( 60, function()

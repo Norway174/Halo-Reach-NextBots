@@ -7,7 +7,11 @@ ENT.BehaviourType = 3
 ENT.BulletNumber = 1
 ENT.IdleSoundDelay = math.random(6,10)
 ENT.SightType = 2
- 
+ENT.OnMeleeImpactSoundTbl = { "halo_reach/materials/melee_impact_fleshy/bigsmunch.ogg", "halo_reach/materials/melee_impact_fleshy/bonecrunchimpact.ogg", "halo_reach/materials/melee_impact_fleshy/goopunch.ogg", "halo_reach/materials/melee_impact_fleshy/melee_group.ogg", "halo_reach/materials/melee_impact_fleshy/meleehit2.ogg" }
+ENT.OnLeapSFX = { "halo_reach/characters/flood/flood_combat_elite/stand_pistol_leap_melee/stand_pistol_leap_melee.ogg", "halo_reach/characters/flood/flood_combat_human/stand_pistol_leap_melee/stand_pistol_leap_melee.ogg" }
+ENT.OnLandSFX = { "halo_reach/characters/footsteps/flood/mud/jump/jump1.ogg", "halo_reach/characters/footsteps/flood/mud/jump/jump3.ogg", "halo_reach/characters/footsteps/flood/mud/jump/jump4.ogg" }
+ENT.OnMeleeSFX =  { "halo_reach/characters/flood/flood_combat_human/stand_pistol_airborne_melee/stand_pistol_airborne_melee.ogg", "halo_reach/characters/flood/flood_combat_human/stand_pistol_leap_melee/stand_pistol_leap_melee.ogg",
+			"halo_reach/characters/flood/flood_combat_human/stand_pistol_melee/stand_pistol_melee.ogg", "halo_reach/characters/flood/flood_combat_elite/stand_pistol_melee_airborne/stand_pistol_melee_airborne.ogg", "halo_reach/characters/flood/flood_combat_elite/stand_pistol_leap_melee/stand_pistol_leap_melee.ogg" }
 --ENT.FriendlyToPlayers = true
 
 --ENT.WalkAnim = {ACT_RUN_PISTOL}
@@ -76,6 +80,8 @@ ENT.CanUse = true
 ENT.SearchJustAsSpawned = false
 
 ENT.Faction = "FACTION_FLOOD"
+
+ENT.LocGravity = 600
 
 ENT.MeleeEvents = {
 	["event_pattack"] = true,
@@ -160,7 +166,7 @@ function ENT:OnInitialize()
 	self:DoInit()
 	self.VoiceType = self.VoiceType or "Flood_Human"
 	self.Difficulty = GetConVar("halo_reach_nextbots_ai_difficulty"):GetInt()
-	if math.random(1,4) == 1 and !self.GotUp then
+	if !self.GotUp and math.random(1,4) == 1 then
 		self:Give(self.PossibleWeapons[math.random(#self.PossibleWeapons)])
 	end
 	self:SetCollisionBounds(Vector(20,20,80),Vector(-20,-20,0))
@@ -214,7 +220,14 @@ function ENT:OnLeaveGround(ent)
 			self.OldSeq = self:SelectWeightedSequence(self.RunAnim[math.random(#self.RunAnim)])
 		end
 		self.LastTimeOnGround = CurTime()
-		self:StartActivity(self.IdleAnim[math.random(#self.IdleAnim)])
+		self:StartActivity(self:GetSequenceActivity(self:LookupSequence("Air")))
+		local func = function()
+			while (!self.loco:IsOnGround()) do
+				coroutine.wait(0.01)
+			end
+		end
+		table.insert(self.StuffToRunInCoroutine,func)
+		self:ResetAI()
 	end
 end
 
@@ -222,13 +235,7 @@ function ENT:OnLandOnGround(ent)
 	if self.FlyingDead then
 		self.HasLanded = true
 	elseif self.LastTimeOnGround then
-		local t = CurTime()-self.LastTimeOnGround
-		local seq
-		if t < 3 then
-			seq = "Land_Soft"
-		else
-			seq = "Land_Hard"
-		end
+		local seq = "Land"
 		local func = function()
 			self:PlaySequenceAndWait(seq)
 			self:StartActivity(self.IdleAnim[math.random(#self.IdleAnim)])
@@ -323,6 +330,17 @@ function ENT:OnInjured(dmg)
 	if self.NPSound < CurTime() then
 		self:Speak("OnHurt")
 		self.NPSound = CurTime()+math.random(2,5)
+	end
+	if rel == "foe" then
+		if !self.Switched then
+			self.Switched = true
+			timer.Simple( 5, function()
+				if IsValid(self) then
+					self.Switched = false
+				end
+			end )
+			self:SetEnemy(dmg:GetAttacker())
+		end
 	end
 end
 
@@ -475,7 +493,7 @@ function ENT:MoveToPosition( pos, anim, speed, getnear )
 	if !util.IsInWorld( pos ) then return "Tried to move out of the world!" end
 	self:StartActivity( anim )			-- Move animation
 	self.loco:SetDesiredSpeed( speed )		-- Move speed
-	self.loco:SetAcceleration( speed+speed )
+	self.loco:SetAcceleration( speed*2 )
 	self:MoveToPos( pos, getnear )
 	self:StartActivity( self.IdleAnim[math.random(1,#self.IdleAnim)] )
 end	
@@ -721,7 +739,7 @@ function ENT:RunToPosition( pos, anim, speed )
 	if !util.IsInWorld( pos ) then return "Tried to move out of the world!" end
 	self:StartActivity( anim )			-- Move animation
 	self.loco:SetDesiredSpeed( speed )		-- Move speed
-	self.loco:SetAcceleration( speed+speed )
+	self.loco:SetAcceleration( speed*2 )
 	self:MoveToPos( pos )
 end	
 
@@ -779,7 +797,6 @@ function ENT:Dodge( name, speed )
 			self.Dodged = false
 		end
 	end )
-	
 	self:PlaySequenceAndPWait( name, speed, self:GetPos() )
 
 end
@@ -848,6 +865,7 @@ function ENT:DoMeleeDamage()
 		if v != self and self:CheckRelationships(v) != "friend" then
 			v:TakeDamage( damage, self, self )
 			--v:EmitSound( self.OnMeleeSoundTbl[math.random(1,#self.OnMeleeSoundTbl)] )
+			v:EmitSound( self.OnMeleeImpactSoundTbl[math.random(1,#self.OnMeleeImpactSoundTbl)] )
 			if v:IsPlayer() then
 				v:ViewPunch( self.ViewPunchPlayers )
 			end
@@ -881,7 +899,7 @@ function ENT:Melee()
 		--print(ydif)
 		if ydif >= 270 or ydif <= 90 then
 			self:SetAngles(Angle(self:GetAngles().p,ang.y,self:GetAngles().r))
-			--self:EmitSound( self.OnMeleeSoundTbl[math.random(1,#self.OnMeleeSoundTbl)] )
+			self:EmitSound( self.OnMeleeSFX[math.random(1,#self.OnMeleeSFX)] )
 			move = true
 			angl = false
 			self.MeleeDir = self:GetForward()
@@ -937,10 +955,12 @@ end
 function ENT:JumpTo(ent)
 	local dir = self:GetAimVector()*1200
 	self.loco:JumpAcrossGap(self:GetPos()+dir,self:GetForward())
+	self:EmitSound( self.OnLeapSFX[math.random(1,#self.OnLeapSFX)] )
 	local func = function()
 		while (!self.loco:IsOnGround()) do
 			coroutine.wait(0.01)
 		end
+		self:EmitSound( self.OnLandSFX[math.random(1,#self.OnLandSFX)] )
 		self:PlaySequenceAndWait( "Land" )
 	end
 	table.insert(self.StuffToRunInCoroutine,func)
@@ -959,6 +979,7 @@ function ENT:ChaseEnt(ent,los)
 	path:Compute( self, ent:GetPos() )
 	if ( !path:IsValid() ) then coroutine.wait(1) return "Failed" end
 	local saw = false
+	local shot
 	while ( path:IsValid() and IsValid(ent) ) do
 		if !self.DoingLose then
 			self.DoingLose = true
@@ -990,6 +1011,10 @@ function ENT:ChaseEnt(ent,los)
 			end
 			if cansee then
 				self.LastSeenEnemyPos = ent:GetPos()
+				if !shot then 
+					self:FireWep()
+				end
+				shot = !shot
 			end
 			if !self.Jumped then
 				self.Jumped = true
@@ -1062,6 +1087,7 @@ function ENT:OnKilled( dmginfo ) -- When killed
 				local pos = rag:GetPos()
 				local ang = Angle(0,rag:GetAngles().y,0)
 				local sel = ents.Create( class )
+				sel.ReviveColor = rag:GetColor()
 				sel.IsNTarget = true
 				sel:SetPos(rag:GetPos())
 				sel:SetAngles(ang)
@@ -1143,23 +1169,23 @@ function ENT:FootstepSound()
 	local character = self.Voices[self.VoiceType]
 	if character["OnStep"] and istable(character["OnStep"]) then
 		local sound = table.Random(character["OnStep"])
-		self:EmitSound(sound,55)
+		self:EmitSound(sound,75)
 	end
 end
 
 
 function ENT:BodyUpdate()
 	local act = self:GetActivity()
-	if moves[act] and self:Health() > 0 then
-		self:BodyMoveXY()
-	end
+	--if moves[act] and self:Health() > 0 then
+		--self:BodyMoveXY()
+	--end
 	if !self.loco:GetVelocity():IsZero() and self.loco:IsOnGround() then
 	if !self.LMove then
-			self.LMove = CurTime()+0.27
+			self.LMove = CurTime()+0.4
 		else
 			if self.LMove < CurTime() then
 				self:FootstepSound()
-				self.LMove = CurTime()+0.27
+				self.LMove = CurTime()+0.4
 			end
 		end
 	end

@@ -55,6 +55,7 @@ end
 
 function ENT:OnInitialize()
 	--self:SetSolidMask(MASK_NPCSOLID_BRUSHONLY)
+	self.FriendlyToPlayers = GetConVar("halo_reach_nextbots_ai_hostile_humans"):GetInt() != 1
 	self:SetBloodColor( BLOOD_COLOR_MECH )
 	self:SetPos(self:GetPos()+self:GetUp()*190)
 	self:SetCollisionBounds(Vector(-40,-40,-157),Vector(40,40,160))
@@ -141,6 +142,10 @@ function ENT:GetShootPos()
 	return self:GetAttachment(1).Pos
 end
 
+function ENT:GetActiveWeapon()
+	return self -- Amazing brain
+end
+
 if SERVER then
 
 	function ENT:Think()
@@ -156,7 +161,7 @@ if SERVER then
 						timer.Simple( i*0.5, function()
 							if IsValid(self) and IsValid(self.Enemy) then
 								local att = self:GetAttachment(i)
-								rocket = ents.Create("astw2_haloreach_missile_launched")
+								rocket = ents.Create("astw2_halo3_missile_launched")
 								rocket:SetPos(att.Pos)
 								rocket:SetAngles(att.Ang)
 								rocket:SetOwner(self)
@@ -165,12 +170,28 @@ if SERVER then
 								--rocket:SetMoveType( MOVETYPE_NONE )
 								--rocket:SetParent( self, 2 )
 								rocket.BlastRadius = 200
-								rocket.BlastDMG = 80						
+								rocket.BlastDMG = 300						
 								sound.Play("halo_reach/weapons/anti_air_cannon/aa_cannon_looping_mt/aa_cannon_loop/out.ogg",self:GetShootPos(),100)
 								local phys = rocket:GetPhysicsObject()
 								if IsValid(phys) then
 									phys:Wake()
 									phys:SetVelocity(att.Ang:Forward()*1000)
+								end
+								local t = rocket.Think
+								rocket.Think = function()
+									if IsValid(rocket) then -- I know, really stupid, yet gmod asked for it
+										t(rocket) 
+										if IsValid(self) then
+											if IsValid(self.Enemy) then
+												local e = self.Enemy
+												local dir = (e:WorldSpaceCenter()-(rocket:WorldSpaceCenter())):GetNormalized()
+												local p = rocket:GetPhysicsObject()
+												if IsValid(p) then
+													p:SetVelocity(dir*2000)
+												end
+											end
+										end
+									end
 								end
 							end
 						end )
@@ -225,7 +246,7 @@ function ENT:BodyUpdate()
 					if self.VSound then self.VSound:Stop() end
 					self.GunnerShoot = true
 				end
-				if math.abs(vp) > 2 then
+				if math.abs(vp) > 3 then
 					self.LTP = self:GetPoseParameter("aim_pitch")
 					local i
 					if (vp) <= self.LTP then
